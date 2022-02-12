@@ -2,10 +2,10 @@ import socket
 from unicodedata import name
 
 HEADER = 64
-PORT = 5050
+PORT = 41001
 FORMAT = 'utf-8'
-DISCONNECT_MESSAGE = "!DISCONNECT"
-SERVER = "127.0.0.1"
+DISCONNECT_MESSAGE = "DISCONNECT"
+SERVER = "10.120.70.145"
 ADDR = (SERVER, PORT)
 
 client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -31,6 +31,6 @@ while True:
     msg = input("Enter a Message: ")
     send(msg)
 
-    if msg == "!DISCONNECT":
+    if msg == "DISCONNECT":
         break
 

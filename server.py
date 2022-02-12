@@ -3,17 +3,19 @@ import socket
 import threading
 
 HEADER = 64
-PORT = 5050
-SERVER = socket.gethostbyname(socket.gethostname())
+PORT = 41001
+SERVER = "10.120.70.145" #running manager on general4.asu.edu
 ADDR = (SERVER, PORT)
 FORMAT = 'utf-8'
 DISCONNECT_MESSAGE = "DISCONNECT"
-QUERY_MESSAGE = "QUERY"
+QUERYP_MESSAGE = "QUERYP"
+QUERYG_MESSAGE = "QUERYG"
 
 
 connectedIP = []
 names = []
 uCount = 0
+games = []
 
 server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
@@ -42,12 +44,15 @@ def handle_client(conn, addr):
             if msg == DISCONNECT_MESSAGE:
                 #connectedIP.pop(int(addr[3]))
                 connected = False
+                print(f"{addr[2]} has left the game!")
                 connectedIP.remove(addr)  
 
 
-            if msg == "QUERY_MESSAGE":
+            if msg == QUERYP_MESSAGE:
                 queryPlayers()
             
+            if msg == QUERYG_MESSAGE:
+                queryGames()
 
             print(f"[{addr[2]}] {msg}")
             conn.send("Msg received".encode(FORMAT))
@@ -56,7 +61,7 @@ def handle_client(conn, addr):
         
 def start():
     server.listen()
-    print(f"[LISTENING] Server is listening on {SERVER}")
+    print(f"[LISTENING] Server is listening on {SERVER} {PORT}")
     while True:
         conn, addr = server.accept()
         thread = threading.Thread(target=handle_client, args=(conn, addr))
@@ -72,6 +77,8 @@ def queryPlayers():
 
         print(str(i[2]) + ": " + "IP " + str(count) + ": " + str(i[0]) + " Port: " + str(i[1]))
 
+def queryGames():
+    print("List of Games and Users playing in games: " + str(len(games)))
 
 print("[STARTING] server is starting...")
 start()
