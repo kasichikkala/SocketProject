@@ -1,10 +1,11 @@
 from concurrent.futures import thread
-import socket 
+import socket
+import sys 
 import threading
 
 HEADER = 64
-PORT = 41001
-SERVER = "10.120.70.145" #running manager on general4.asu.edu
+PORT = int(sys.argv[1])
+SERVER = "10.120.70.106" #running manager on general4.asu.edu
 ADDR = (SERVER, PORT)
 FORMAT = 'utf-8'
 DISCONNECT_MESSAGE = "DISCONNECT"
@@ -38,8 +39,7 @@ def handle_client(conn, addr):
                 connectedIP.append(addr)
                 print(addr)
                 count+=1
-                
-
+                conn.send("SUCCESS".encode(FORMAT))
             
             if msg == DISCONNECT_MESSAGE:
                 #connectedIP.pop(int(addr[3]))
@@ -49,10 +49,10 @@ def handle_client(conn, addr):
 
 
             if msg == QUERYP_MESSAGE:
-                queryPlayers()
+                conn.send(queryPlayers().encode(FORMAT))
             
             if msg == QUERYG_MESSAGE:
-                queryGames()
+                conn.send(queryGames().encode(FORMAT))
 
             print(f"[{addr[2]}] {msg}")
             conn.send("Msg received".encode(FORMAT))
@@ -70,15 +70,27 @@ def start():
         
 
 
-def queryPlayers():
+#def queryPlayers():
+#    count = 0
+ #   for i in connectedIP:
+  #      count+= 1
+  #      print(str(i[2]) + ": " + "IP " + str(count) + ": " + str(i[0]) + " Port: " + str(i[1]))
+
+def  queryPlayers():
     count = 0
+    msg = ""
     for i in connectedIP:
         count+= 1
+        msg += str(i[2]) + ": " + ": " + str(i[0]) + " Local Port: " + str(i[1]) + "\n"
 
-        print(str(i[2]) + ": " + "IP " + str(count) + ": " + str(i[0]) + " Port: " + str(i[1]))
+    return msg
+
+def send(msg, socket):
+    encodedMessage = bytes(msg, 'utf-8')
+    socket.sendall(encodedMessage)
 
 def queryGames():
-    print("List of Games and Users playing in games: " + str(len(games)))
+    return "List of Games and Users playing in games: " + str(len(games)) # will return 0 since start games has not been implemented yet. 
 
-print("[STARTING] server is starting...")
+print("[STARTING] Server is starting...")
 start()
