@@ -4,8 +4,8 @@ import sys
 import threading
 
 HEADER = 64
-PORT = int(sys.argv[1])
-SERVER = "10.120.70.106" #running manager on general4.asu.edu
+PORT =  5050 #int(sys.argv[1])
+SERVER = socket.gethostbyname(socket.gethostname()) #running manager on general4.asu.edu
 ADDR = (SERVER, PORT)
 FORMAT = 'utf-8'
 DISCONNECT_MESSAGE = "DISCONNECT"
@@ -14,6 +14,7 @@ QUERYG_MESSAGE = "QUERYG"
 
 
 connectedIP = []
+players = []
 names = []
 uCount = 0
 games = []
@@ -21,6 +22,17 @@ games = []
 server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
 server.bind(ADDR)
+
+class Player:
+    def __init__(self, name, port):
+        self.name = name
+        self.port = port
+
+    def __str__(self):
+        return "Name: %s  Port: %s" % (self.name, self.port)
+
+    def getName(self):
+        return "%s" % (self.name)
 
 def handle_client(conn, addr):
     count = 0
@@ -32,6 +44,8 @@ def handle_client(conn, addr):
         if msg_length:
             msg_length = int(msg_length)
             msg = conn.recv(msg_length).decode(FORMAT)
+            commandmsg = msg.split(" ")
+            
 
             if(count == 0):
                 
@@ -40,18 +54,24 @@ def handle_client(conn, addr):
                 print(addr)
                 count+=1
                 conn.send("SUCCESS".encode(FORMAT))
+
+            if commandmsg[0] == "register":
+                temp = Player(commandmsg[1], commandmsg[3])
+                print(temp)
+                players.append(temp)
+                #make it so that it starts another process called player.py that runs another socket. 
             
-            if msg == DISCONNECT_MESSAGE:
+            if commandmsg[0] == DISCONNECT_MESSAGE:
                 #connectedIP.pop(int(addr[3]))
                 connected = False
                 print(f"{addr[2]} has left the game!")
                 connectedIP.remove(addr)  
+           # if commandmsg[0] == "start game"
 
-
-            if msg == QUERYP_MESSAGE:
+            if commandmsg[0] == QUERYP_MESSAGE:
                 conn.send(queryPlayers().encode(FORMAT))
             
-            if msg == QUERYG_MESSAGE:
+            if commandmsg[0] == QUERYG_MESSAGE:
                 conn.send(queryGames().encode(FORMAT))
 
             print(f"[{addr[2]}] {msg}")
@@ -68,20 +88,16 @@ def start():
         thread.start()
         print(f"[ACTIVE CONNECTIONS] {threading.activeCount() - 1}")
         
+def startGame():
+    return 0
 
 
-#def queryPlayers():
-#    count = 0
- #   for i in connectedIP:
-  #      count+= 1
-  #      print(str(i[2]) + ": " + "IP " + str(count) + ": " + str(i[0]) + " Port: " + str(i[1]))
-
-def  queryPlayers():
+def queryPlayers():
     count = 0
     msg = ""
-    for i in connectedIP:
+    for i in players:
         count+= 1
-        msg += str(i[2]) + ": " + ": " + str(i[0]) + " Local Port: " + str(i[1]) + "\n"
+        msg += str(i) + "\n"
 
     return msg
 
@@ -91,6 +107,8 @@ def send(msg, socket):
 
 def queryGames():
     return "List of Games and Users playing in games: " + str(len(games)) # will return 0 since start games has not been implemented yet. 
+
+
 
 print("[STARTING] Server is starting...")
 start()

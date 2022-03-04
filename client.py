@@ -3,10 +3,10 @@ import sys
 from unicodedata import name
 
 HEADER = 64
-PORT = int(sys.argv[2])
+PORT = 5050 #int(sys.argv[2])
 FORMAT = 'utf-8'
 DISCONNECT_MESSAGE = "DISCONNECT"
-SERVER = str(sys.argv[1])
+SERVER = "192.168.56.1" #str(sys.argv[1])
 ADDR = (SERVER, PORT)
 
 client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -21,21 +21,14 @@ def send(msg):
     client.send(message)
     print(client.recv(2048).decode(FORMAT))
 
+flag = 0
 
-count = 0
-
-while True:
-    if(count == 0):
-        msg = input("Register player: [USERNAME , IP, PORT]")
-        #msg.split(" ")
-        #msg = msg[0]
-        send(msg)
-        count +=1
-
+while(flag== 0):
     msg = input("Enter a Message: ")
     send(msg)
 
     if msg == "DISCONNECT":
+        flag += 1
         break
 
     if msg == "QUERYP":
@@ -43,3 +36,4 @@ while True:
     
     if msg == "QUERYG":
         print(client.recv(2048).decode(FORMAT))
+
