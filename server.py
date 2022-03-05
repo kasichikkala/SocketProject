@@ -1,4 +1,5 @@
 from concurrent.futures import thread
+from distutils import command
 import socket
 import sys 
 import threading
@@ -8,12 +9,19 @@ PORT =  5050 #int(sys.argv[1])
 SERVER = socket.gethostbyname(socket.gethostname()) #running manager on general4.asu.edu
 ADDR = (SERVER, PORT)
 FORMAT = 'utf-8'
+START_GAME = "GAME"
 DISCONNECT_MESSAGE = "DISCONNECT"
 QUERYP_MESSAGE = "QUERYP"
 QUERYG_MESSAGE = "QUERYG"
 
 
 connectedIP = []
+userNames = []
+portNum = []
+flagGame = True
+
+game_identifier = 0
+
 players = []
 names = []
 uCount = 0
@@ -23,16 +31,16 @@ server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
 server.bind(ADDR)
 
-class Player:
-    def __init__(self, name, port):
-        self.name = name
-        self.port = port
+# class Player:
+#     def __init__(self, name, port):
+#         self.name = name
+#         self.port = port
 
-    def __str__(self):
-        return "Name: %s  Port: %s" % (self.name, self.port)
+#     def __str__(self):
+#         return "Name: %s  Port: %s" % (self.name, self.port)
 
-    def getName(self):
-        return "%s" % (self.name)
+#     def getName(self):
+#         return "%s" % (self.name)
 
 def handle_client(conn, addr):
     count = 0
@@ -45,28 +53,36 @@ def handle_client(conn, addr):
             msg_length = int(msg_length)
             msg = conn.recv(msg_length).decode(FORMAT)
             commandmsg = msg.split(" ")
-            
-
-            if(count == 0):
-                
-                addr = addr + (msg,)
+           
+            if(commandmsg[0] == "register"):
+                namemsg = commandmsg[1]
+                addr = addr + (namemsg,flagGame,) 
                 connectedIP.append(addr)
                 print(addr)
-                count+=1
                 conn.send("SUCCESS".encode(FORMAT))
 
-            if commandmsg[0] == "register":
-                temp = Player(commandmsg[1], commandmsg[3])
-                print(temp)
-                players.append(temp)
-                #make it so that it starts another process called player.py that runs another socket. 
+            # if commandmsg[0] == "register":
+            #     temp = Player(commandmsg[1], commandmsg[3])
+            #     print(temp)
+            #     players.append(temp)
+            #     #make it so that it starts another process called player.py that runs another socket. 
             
             if commandmsg[0] == DISCONNECT_MESSAGE:
-                #connectedIP.pop(int(addr[3]))
                 connected = False
                 print(f"{addr[2]} has left the game!")
-                connectedIP.remove(addr)  
-           # if commandmsg[0] == "start game"
+                connectedIP.remove(addr)  #removing the user from connectedIP list. 
+
+
+            if commandmsg[0] == START_GAME: #start_game username numUsers
+                if(len(connectedIP) <= int(commandmsg[2])):
+                    conn.send("FAILURE Required number of users not present".encode(FORMAT))
+                elif(commandmsg[2] >= 4 or commandmsg[2] <= 1):
+                    conn.send("FAILURE Number of users not possible".encode(FORMAT))
+                elif(commandmsg[1] in connectedIP):
+                    conn.send(startGame().encode(FORMAT))
+                else:
+                    conn.send("FAILURE".encode(FORMAT))
+
 
             if commandmsg[0] == QUERYP_MESSAGE:
                 conn.send(queryPlayers().encode(FORMAT))
@@ -86,16 +102,21 @@ def start():
         conn, addr = server.accept()
         thread = threading.Thread(target=handle_client, args=(conn, addr))
         thread.start()
-        print(f"[ACTIVE CONNECTIONS] {threading.activeCount() - 1}")
+        print(f"[ACTIVE CONNECTIONS] {threading.active_Count() - 1}")
         
 def startGame():
-    return 0
+    msg = ""
+    msg += "Game identifier" + game_identifier 
+    games += 1
+    for i in connectedIP:
+        msg += str(i) + "\n"
+    return msg
 
 
 def queryPlayers():
     count = 0
     msg = ""
-    for i in players:
+    for i in connectedIP:
         count+= 1
         msg += str(i) + "\n"
 

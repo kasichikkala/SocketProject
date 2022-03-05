@@ -12,6 +12,7 @@ ADDR = (SERVER, PORT)
 client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 client.connect(ADDR)
 
+
 def send(msg):
     message = msg.encode(FORMAT)
     msg_length = len(message)
@@ -21,19 +22,24 @@ def send(msg):
     client.send(message)
     print(client.recv(2048).decode(FORMAT))
 
+
 flag = 0
 
 while(flag== 0):
     msg = input("Enter a Message: ")
     send(msg)
 
-    if msg == "DISCONNECT":
+    clientMsg = msg.split(" ")
+    if clientMsg[0] == "DISCONNECT":
         flag += 1
         break
+    
+    if clientMsg[0] == "GAME":
+        print(client.recv(2048).decode(FORMAT))
 
-    if msg == "QUERYP":
+    if clientMsg[0] == "QUERYP":
         print(client.recv(2048).decode(FORMAT))
     
-    if msg == "QUERYG":
+    if clientMsg[0] == "QUERYG":
         print(client.recv(2048).decode(FORMAT))
 
