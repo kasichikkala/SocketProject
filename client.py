@@ -10,6 +10,7 @@ SERVER = "192.168.56.1" #str(sys.argv[1])
 ADDR = (SERVER, PORT)
 
 client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+peerSocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 client.connect(ADDR)
 
 
@@ -36,6 +37,18 @@ while(flag== 0):
     
     if clientMsg[0] == "GAME":
         print(client.recv(2048).decode(FORMAT))
+        for i in returnmsg
+        {
+            peerSocket.connect(ADDR)
+            msg = "Inviting you to a game from"  
+            message = msg.encode(FORMAT)
+            msg_length = len(message)
+            send_length = str(msg_length).encode(FORMAT)
+            send_length += b' ' * (HEADER - len(send_length))
+            client.send(send_length)
+            client.send(message)   
+        }
+        
 
     if clientMsg[0] == "QUERYP":
         print(client.recv(2048).decode(FORMAT))

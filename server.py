@@ -3,6 +3,7 @@ from distutils import command
 import socket
 import sys 
 import threading
+import random
 
 HEADER = 64
 PORT =  5050 #int(sys.argv[1])
@@ -20,7 +21,7 @@ userNames = []
 portNum = []
 flagGame = True
 
-game_identifier = 0
+gameID = 0
 
 players = []
 names = []
@@ -31,20 +32,81 @@ server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
 server.bind(ADDR)
 
-# class Player:
-#     def __init__(self, name, port):
-#         self.name = name
-#         self.port = port
+# class Card(object):
+#     def __init__(self, suit, val):
+#         self.suit = suit
+#         self.value = val
 
+#     # Implementing build in methods so that you can print a card object
+#     def __unicode__(self):
+#         return self.show()
 #     def __str__(self):
-#         return "Name: %s  Port: %s" % (self.name, self.port)
+#         return self.show()
+#     def __repr__(self):
+#         return self.show()
+        
+#     def show(self):
+#         if self.value == 1:
+#             val = "Ace"
+#         elif self.value == 11:
+#             val = "Jack"
+#         elif self.value == 12:
+#             val = "Queen"
+#         elif self.value == 13:
+#             val = "King"
+#         else:
+#             val = self.value
 
-#     def getName(self):
-#         return "%s" % (self.name)
+#         return "{} of {}".format(val, self.suit)
+
+# class Deck(object):
+#     def __init__(self):
+#         self.cards = []
+#         self.build()
+
+#     # Display all cards in the deck
+#     def show(self):
+#         for card in self.cards:
+#             return card.show()
+
+#     # Generate 52 cards
+#     def build(self):
+#         self.cards = []
+#         for suit in ['Hearts', 'Clubs', 'Diamonds', 'Spades']:
+#             for val in range(1,14):
+#                 self.cards.append(Card(suit, val))
+
+#     # Shuffle the deck
+#     def shuffle(self, num=1):
+#         length = len(self.cards)
+#         for _ in range(num):
+#             # This is the fisher yates shuffle algorithm
+#             for i in range(length-1, 0, -1):
+#                 randi = random.randint(0, i)
+#                 if i == randi:
+#                     continue
+#                 self.cards[i], self.cards[randi] = self.cards[randi], self.cards[i]
+#             # You can also use the build in shuffle method
+#             # random.shuffle(self.cards)
+
+#     # Return the top card
+#     def deal(self):
+#         return self.cards.pop()
+# # class Player:
+# #     def __init__(self, name, port):
+# #         self.name = name
+# #         self.port = port
+
+# #     def __str__(self):
+# #         return "Name: %s  Port: %s" % (self.name, self.port)
+
+# #     def getName(self):
+# #         return "%s" % (self.name)
 
 def handle_client(conn, addr):
     count = 0
     print(f"[NEW CONNECTION] {addr} connected.")
+    global gameID
 
     connected = True
     while connected:
@@ -56,6 +118,7 @@ def handle_client(conn, addr):
            
             if(commandmsg[0] == "register"):
                 namemsg = commandmsg[1]
+                userNames.append(namemsg)
                 addr = addr + (namemsg,flagGame,) 
                 connectedIP.append(addr)
                 print(addr)
@@ -70,15 +133,17 @@ def handle_client(conn, addr):
             if commandmsg[0] == DISCONNECT_MESSAGE:
                 connected = False
                 print(f"{addr[2]} has left the game!")
+                userNames.remove(addr[2])
                 connectedIP.remove(addr)  #removing the user from connectedIP list. 
 
 
             if commandmsg[0] == START_GAME: #start_game username numUsers
                 if(len(connectedIP) <= int(commandmsg[2])):
                     conn.send("FAILURE Required number of users not present".encode(FORMAT))
-                elif(commandmsg[2] >= 4 or commandmsg[2] <= 1):
+                elif(int(commandmsg[2]) >= 4 or int(commandmsg[2]) <= 1):
                     conn.send("FAILURE Number of users not possible".encode(FORMAT))
-                elif(commandmsg[1] in connectedIP):
+                elif(commandmsg[1] in userNames):
+                    gameID += 1
                     conn.send(startGame().encode(FORMAT))
                 else:
                     conn.send("FAILURE".encode(FORMAT))
@@ -89,6 +154,9 @@ def handle_client(conn, addr):
             
             if commandmsg[0] == QUERYG_MESSAGE:
                 conn.send(queryGames().encode(FORMAT))
+
+            # if commandmsg[0] == "SEND":
+
 
             print(f"[{addr[2]}] {msg}")
             conn.send("Msg received".encode(FORMAT))
@@ -102,12 +170,13 @@ def start():
         conn, addr = server.accept()
         thread = threading.Thread(target=handle_client, args=(conn, addr))
         thread.start()
-        print(f"[ACTIVE CONNECTIONS] {threading.active_Count() - 1}")
+        print(f"[ACTIVE CONNECTIONS] {threading.activeCount() - 1}")
         
 def startGame():
+    global gameID
     msg = ""
-    msg += "Game identifier" + game_identifier 
-    games += 1
+    msg += "Game identifier: " + str(gameID) + "\n"
+    gameID += 1
     for i in connectedIP:
         msg += str(i) + "\n"
     return msg
@@ -127,9 +196,8 @@ def send(msg, socket):
     socket.sendall(encodedMessage)
 
 def queryGames():
-    return "List of Games and Users playing in games: " + str(len(games)) # will return 0 since start games has not been implemented yet. 
-
-
+    global gameID
+    return "List of Games and Users playing in games: " + str(gameID) # will return 0 since start games has not been implemented yet. 
 
 print("[STARTING] Server is starting...")
 start()
