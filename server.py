@@ -6,8 +6,8 @@ import threading
 import random
 
 HEADER = 64
-PORT =  5050 #int(sys.argv[1])
-SERVER = socket.gethostbyname(socket.gethostname()) #running manager on general4.asu.edu
+PORT = int(sys.argv[1])
+SERVER = "10.120.70.145"#running manager on general4.asu.edu
 ADDR = (SERVER, PORT)
 FORMAT = 'utf-8'
 START_GAME = "GAME"
@@ -17,8 +17,10 @@ QUERYG_MESSAGE = "QUERYG"
 
 
 connectedIP = []
+
 userNames = []
 portNum = []
+IPlist = []
 flagGame = True
 
 gameID = 0
@@ -116,9 +118,13 @@ def handle_client(conn, addr):
             msg = conn.recv(msg_length).decode(FORMAT)
             commandmsg = msg.split(" ")
            
-            if(commandmsg[0] == "register"):
+            if(commandmsg[0] == "register"): #register username IP port
                 namemsg = commandmsg[1]
                 userNames.append(namemsg)
+
+                IPlist.append(addr[0])
+                portNum.append(addr[1])
+                
                 addr = addr + (namemsg,flagGame,) 
                 connectedIP.append(addr)
                 print(addr)
@@ -143,8 +149,13 @@ def handle_client(conn, addr):
                 elif(int(commandmsg[2]) >= 4 or int(commandmsg[2]) <= 1):
                     conn.send("FAILURE Number of users not possible".encode(FORMAT))
                 elif(commandmsg[1] in userNames):
-                    gameID += 1
-                    conn.send(startGame().encode(FORMAT))
+                    #gameID += 1
+                    #print(addr)
+                    peerInfo = "Peer info: " +" -" + IPlist[0] + " -" + str(portNum[0])
+                    # conn.send(addr[0].encode(FORMAT))
+                    # conn.send(str(addr[1]).encode(FORMAT))
+                    #conn.send(str(peerInfo).encode(FORMAT))
+                    conn.send(str(peerInfo).encode(FORMAT) + " -".encode(FORMAT) + "\n".encode(FORMAT) + startGame().encode(FORMAT))
                 else:
                     conn.send("FAILURE".encode(FORMAT))
 
@@ -159,7 +170,7 @@ def handle_client(conn, addr):
 
 
             print(f"[{addr[2]}] {msg}")
-            conn.send("Msg received".encode(FORMAT))
+            conn.send("Msg received by server".encode(FORMAT))
 
     conn.close()
         
@@ -175,7 +186,8 @@ def start():
 def startGame():
     global gameID
     msg = ""
-    msg += "Game identifier: " + str(gameID) + "\n"
+    #msg += "Game identifier: " + str(gameID) + "\n"
+
     gameID += 1
     for i in connectedIP:
         msg += str(i) + "\n"
